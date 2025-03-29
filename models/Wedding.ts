@@ -22,6 +22,11 @@ export interface IWedding extends Document {
   gallery: string[]
   createdAt: Date
   updatedAt: Date
+  slug: string
+  isPrivate: boolean
+  password: string
+  hasCustomDomain: boolean
+  customDomain: string
 }
 
 const WeddingSchema: Schema = new Schema(
@@ -47,6 +52,11 @@ const WeddingSchema: Schema = new Schema(
       },
     ],
     gallery: [{ type: String }],
+    slug: { type: String, required: true, unique: true },
+    isPrivate: { type: Boolean, default: false },
+    password: { type: String },
+    hasCustomDomain: { type: Boolean, default: false },
+    customDomain: { type: String },
   },
   { timestamps: true },
 )
