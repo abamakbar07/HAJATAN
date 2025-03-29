@@ -12,6 +12,11 @@ export interface IWedding extends Document {
   country: string
   theme: string
   story: string
+  slug: string
+  isPrivate: boolean
+  password?: string
+  hasCustomDomain: boolean
+  customDomain?: string
   events: Array<{
     title: string
     date: Date
@@ -22,11 +27,6 @@ export interface IWedding extends Document {
   gallery: string[]
   createdAt: Date
   updatedAt: Date
-  slug: string
-  isPrivate: boolean
-  password: string
-  hasCustomDomain: boolean
-  customDomain: string
 }
 
 const WeddingSchema: Schema = new Schema(
@@ -42,6 +42,11 @@ const WeddingSchema: Schema = new Schema(
     country: { type: String, required: true },
     theme: { type: String, default: "modern" },
     story: { type: String },
+    slug: { type: String, required: true, unique: true },
+    isPrivate: { type: Boolean, default: false },
+    password: { type: String },
+    hasCustomDomain: { type: Boolean, default: false },
+    customDomain: { type: String },
     events: [
       {
         title: { type: String, required: true },
@@ -52,11 +57,6 @@ const WeddingSchema: Schema = new Schema(
       },
     ],
     gallery: [{ type: String }],
-    slug: { type: String, required: true, unique: true },
-    isPrivate: { type: Boolean, default: false },
-    password: { type: String },
-    hasCustomDomain: { type: Boolean, default: false },
-    customDomain: { type: String },
   },
   { timestamps: true },
 )
