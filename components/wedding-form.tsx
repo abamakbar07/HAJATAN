@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -32,7 +32,22 @@ export function WeddingForm({ wedding, isEditing = false }: WeddingFormProps) {
     country: wedding?.country || "",
     theme: wedding?.theme || "modern",
     story: wedding?.story || "",
+    slug: wedding?.slug || "",
   })
+
+  // Generate slug when bride or groom name changes
+  useEffect(() => {
+    if (!isEditing && formData.brideName && formData.groomName) {
+      const bride = formData.brideName.toLowerCase().replace(/\s+/g, '-');
+      const groom = formData.groomName.toLowerCase().replace(/\s+/g, '-');
+      const newSlug = `${bride}-and-${groom}-${Date.now().toString().slice(-4)}`;
+      
+      setFormData(prev => ({
+        ...prev,
+        slug: newSlug
+      }));
+    }
+  }, [formData.brideName, formData.groomName, isEditing]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -48,6 +63,13 @@ export function WeddingForm({ wedding, isEditing = false }: WeddingFormProps) {
     setLoading(true)
 
     try {
+      // Make sure slug exists
+      if (!formData.slug) {
+        const bride = formData.brideName.toLowerCase().replace(/\s+/g, '-');
+        const groom = formData.groomName.toLowerCase().replace(/\s+/g, '-');
+        formData.slug = `${bride}-and-${groom}-${Date.now().toString().slice(-4)}`;
+      }
+
       const url = isEditing ? `/api/weddings/${wedding._id}` : "/api/weddings"
       const method = isEditing ? "PUT" : "POST"
 
@@ -117,6 +139,20 @@ export function WeddingForm({ wedding, isEditing = false }: WeddingFormProps) {
                 placeholder="Enter groom's name"
               />
             </div>
+            {isEditing && (
+              <div className="space-y-2">
+                <Label htmlFor="slug">URL Slug</Label>
+                <Input
+                  id="slug"
+                  name="slug"
+                  value={formData.slug}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter URL slug"
+                />
+                <p className="text-xs text-muted-foreground">The URL for your wedding page (e.g. yourwedding.com/bride-and-groom)</p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="date">Wedding Date</Label>
               <Input id="date" name="date" type="date" value={formData.date} onChange={handleChange} required />

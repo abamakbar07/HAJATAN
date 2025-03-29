@@ -1,16 +1,16 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -18,9 +18,30 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  useEffect(() => {
+    // Check for success message from redirect after signup
+    const success = searchParams.get("success")
+    if (success) {
+      toast.success(success)
+    }
+    
+    // Check for error message from redirect
+    const errorMsg = searchParams.get("error")
+    if (errorMsg) {
+      setError(decodeURIComponent(errorMsg))
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!email.trim() || !password.trim()) {
+      setError("Email and password are required")
+      return
+    }
+    
     setLoading(true)
     setError("")
 
@@ -34,6 +55,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error)
       } else {
+        toast.success("Logged in successfully")
         router.push("/dashboard")
         router.refresh()
       }
@@ -42,6 +64,11 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSignIn = () => {
+    setLoading(true)
+    signIn("google", { callbackUrl: "/dashboard" })
   }
 
   return (
@@ -78,6 +105,8 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="your@email.com"
+                  disabled={loading}
+                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
@@ -94,6 +123,8 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
+                  disabled={loading}
+                  className="w-full"
                 />
               </div>
               <Button type="submit" className="w-full bg-rose-500 hover:bg-rose-600" disabled={loading}>
@@ -113,7 +144,8 @@ export default function LoginPage() {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={handleGoogleSignIn}
+              disabled={loading}
             >
               <svg
                 className="mr-2 h-4 w-4"

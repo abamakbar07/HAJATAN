@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
 
 interface DashboardStats {
   invitations: number;
@@ -57,6 +58,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [weddingDate, setWeddingDate] = useState<Date | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [noWedding, setNoWedding] = useState(false)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -64,20 +66,29 @@ export default function DashboardPage() {
       
       try {
         setLoading(true)
+        setError(null)
+        
         const response = await fetch("/api/weddings/dashboard");
         
         if (!response.ok) {
-          throw new Error("Failed to fetch dashboard data");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch dashboard data");
         }
         
         const data = await response.json();
+        
         setStats(data.stats);
+        
         if (data.weddingDate) {
           setWeddingDate(new Date(data.weddingDate));
+          setNoWedding(false);
+        } else {
+          setNoWedding(true);
         }
       } catch (err: any) {
         console.error("Error fetching dashboard data:", err);
         setError(err.message);
+        toast.error("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
@@ -164,10 +175,16 @@ export default function DashboardPage() {
           </Card>
         )}
         
-        {!user?.id && !loading && (
+        {loading && (
+          <div className="w-full h-60 flex items-center justify-center">
+            <p className="text-lg text-muted-foreground">Loading your dashboard...</p>
+          </div>
+        )}
+        
+        {!loading && noWedding && (
           <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-col items-center justify-center text-center space-y-4">
+              <div className="flex flex-col items-center justify-center text-center space-y-4 py-8">
                 <h2 className="text-xl font-semibold">You don't have any weddings yet</h2>
                 <p className="text-muted-foreground">Create your first wedding invitation to get started</p>
                 <Link href="/dashboard/weddings/new">
@@ -181,7 +198,7 @@ export default function DashboardPage() {
           </Card>
         )}
         
-        {user?.id && !loading && (
+        {!loading && !noWedding && (
           <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>

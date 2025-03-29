@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Heart } from "lucide-react"
@@ -20,16 +20,40 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-
+  const validateForm = () => {
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      setError("All fields are required")
+      return false
+    }
+    
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long")
+      return false
+    }
+    
     if (password !== confirmPassword) {
       setError("Passwords do not match")
-      setLoading(false)
+      return false
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address")
+      return false
+    }
+    
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
       return
     }
+    
+    setLoading(true)
+    setError("")
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -51,12 +75,17 @@ export default function SignupPage() {
       }
 
       // Redirect to login page after successful signup
-      router.push("/login?success=Account created successfully. Please sign in.")
+      router.push(`/login?success=${encodeURIComponent("Account created successfully. Please sign in.")}`)
     } catch (error: any) {
       setError(error.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSignIn = () => {
+    setLoading(true)
+    signIn("google", { callbackUrl: "/dashboard" })
   }
 
   return (
@@ -93,6 +122,8 @@ export default function SignupPage() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder="John Doe"
+                  disabled={loading}
+                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
@@ -104,6 +135,8 @@ export default function SignupPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="your@email.com"
+                  disabled={loading}
+                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
@@ -116,7 +149,10 @@ export default function SignupPage() {
                   required
                   placeholder="••••••••"
                   minLength={8}
+                  disabled={loading}
+                  className="w-full"
                 />
+                <p className="text-xs text-muted-foreground">Password must be at least 8 characters long</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -127,6 +163,8 @@ export default function SignupPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   placeholder="••••••••"
+                  disabled={loading}
+                  className="w-full"
                 />
               </div>
               <Button type="submit" className="w-full bg-rose-500 hover:bg-rose-600" disabled={loading}>
@@ -146,9 +184,8 @@ export default function SignupPage() {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => {
-                window.location.href = "/api/auth/signin/google"
-              }}
+              onClick={handleGoogleSignIn}
+              disabled={loading}
             >
               <svg
                 className="mr-2 h-4 w-4"
