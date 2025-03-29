@@ -2,6 +2,7 @@ import type React from "react"
 import { Inter } from "next/font/google"
 import { SessionProvider } from "@/providers/session-provider"
 import { Navbar } from "@/components/ui/navbar"
+import { Toaster } from "sonner"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -23,6 +24,7 @@ export default function RootLayout({
         <SessionProvider>
           <Navbar />
           <main>{children}</main>
+          <Toaster position="top-right" />
         </SessionProvider>
       </body>
     </html>
