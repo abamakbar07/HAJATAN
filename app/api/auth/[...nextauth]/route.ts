@@ -26,7 +26,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials")
         }
-
+        console.log(credentials)
         const user = await User.findOne({ email: credentials.email })
 
         if (!user || !user.password) {
