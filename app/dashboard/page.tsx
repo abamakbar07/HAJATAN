@@ -1,4 +1,8 @@
+"use client"
+
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/providers/auth-provider"
 import {
   Calendar,
   ChevronDown,
@@ -19,7 +23,74 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+interface DashboardStats {
+  invitations: number;
+  rsvpResponses: number;
+  confirmedGuests: number;
+  totalGifts: number;
+  invitationsSent: number;
+  invitationsOpened: number;
+  responseRate: number;
+  attendingRate: number;
+  recentResponses: Array<{
+    id: string;
+    name: string;
+    email: string;
+    status: "attending" | "not-attending" | "pending";
+    timestamp: string;
+  }>;
+}
+
 export default function DashboardPage() {
+  const { user, status } = useAuth()
+  const [stats, setStats] = useState<DashboardStats>({
+    invitations: 0,
+    rsvpResponses: 0,
+    confirmedGuests: 0,
+    totalGifts: 0,
+    invitationsSent: 0,
+    invitationsOpened: 0,
+    responseRate: 0,
+    attendingRate: 0,
+    recentResponses: [],
+  })
+  const [loading, setLoading] = useState(true)
+  const [weddingDate, setWeddingDate] = useState<Date | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (status !== "authenticated") return;
+      
+      try {
+        setLoading(true)
+        const response = await fetch("/api/weddings/dashboard");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch dashboard data");
+        }
+        
+        const data = await response.json();
+        setStats(data.stats);
+        if (data.weddingDate) {
+          setWeddingDate(new Date(data.weddingDate));
+        }
+      } catch (err: any) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboardData();
+  }, [status]);
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return "Set Wedding Date";
+    return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6">
@@ -63,452 +134,318 @@ export default function DashboardPage() {
       </header>
       <main className="flex-1 space-y-4 p-4 md:p-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {loading ? "Loading..." : `Welcome back, ${user?.name?.split(" ")[0] || "User"}`}
+          </h1>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
               <Calendar className="mr-2 h-4 w-4" />
-              June 15, 2025
+              {weddingDate ? formatDate(weddingDate) : "No wedding date set"}
             </Button>
-            <Button variant="outline" size="sm" className="hidden md:flex">
-              <Settings className="h-4 w-4" />
-              <span className="sr-only">Settings</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="hidden md:flex"
+              asChild
+            >
+              <Link href="/dashboard/settings">
+                <Settings className="h-4 w-4" />
+                <span className="sr-only">Settings</span>
+              </Link>
             </Button>
           </div>
         </div>
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="guests">Guests</TabsTrigger>
-            <TabsTrigger value="gifts">Gifts</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Invitations</CardTitle>
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">250</div>
-                  <p className="text-xs text-muted-foreground">+15% from last month</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">RSVP Responses</CardTitle>
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">180</div>
-                  <p className="text-xs text-muted-foreground">72% response rate</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Confirmed Guests</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">156</div>
-                  <p className="text-xs text-muted-foreground">86% of responses</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Gifts</CardTitle>
-                  <Gift className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Rp 12.5M</div>
-                  <p className="text-xs text-muted-foreground">From 45 guests</p>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <Card className="lg:col-span-4">
-                <CardHeader>
-                  <CardTitle>RSVP Overview</CardTitle>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  <div className="h-[200px] w-full bg-muted/20 rounded-md flex items-center justify-center">
-                    <p className="text-muted-foreground">RSVP Chart Placeholder</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="lg:col-span-3">
-                <CardHeader>
-                  <CardTitle>Invitation Status</CardTitle>
-                  <CardDescription>Track your invitation delivery and response rates</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center">
-                          <div className="mr-2 h-3 w-3 rounded-full bg-rose-500" />
-                          <span>Sent</span>
-                        </div>
-                        <span className="font-medium">250/250</span>
-                      </div>
-                      <Progress value={100} className="h-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center">
-                          <div className="mr-2 h-3 w-3 rounded-full bg-amber-500" />
-                          <span>Opened</span>
-                        </div>
-                        <span className="font-medium">220/250</span>
-                      </div>
-                      <Progress value={88} className="h-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center">
-                          <div className="mr-2 h-3 w-3 rounded-full bg-green-500" />
-                          <span>Responded</span>
-                        </div>
-                        <span className="font-medium">180/250</span>
-                      </div>
-                      <Progress value={72} className="h-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center">
-                          <div className="mr-2 h-3 w-3 rounded-full bg-blue-500" />
-                          <span>Attending</span>
-                        </div>
-                        <span className="font-medium">156/180</span>
-                      </div>
-                      <Progress value={86} className="h-2" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Recent RSVP Responses</CardTitle>
-                  <CardDescription>You have received 12 new responses in the last 24 hours</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-10 w-10 rounded-full bg-muted"></div>
-                          <div>
-                            <p className="text-sm font-medium">Guest Name {i + 1}</p>
-                            <p className="text-xs text-muted-foreground">Responded {i + 1} hour ago</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              i % 3 === 0
-                                ? "bg-green-100 text-green-800"
-                                : i % 3 === 1
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {i % 3 === 0 ? "Attending" : i % 3 === 1 ? "Maybe" : "Not Attending"}
-                          </span>
-                          <Button variant="ghost" size="icon" className="ml-2">
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>QR Code Check-ins</CardTitle>
-                  <CardDescription>Track guest arrivals on your wedding day</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-center p-4">
-                    <QrCode className="h-24 w-24 text-muted-foreground" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>Total Check-ins</span>
-                      <span className="font-medium">0/156</span>
-                    </div>
-                    <Progress value={0} className="h-2" />
-                  </div>
-                  <div className="rounded-md bg-muted p-4">
-                    <h4 className="mb-2 text-sm font-medium">Wedding Day Status</h4>
-                    <p className="text-sm text-muted-foreground">
-                      QR code check-in system will be active on your wedding day (June 15, 2025)
+        
+        {error && (
+          <Card className="bg-red-50 border-red-200">
+            <CardContent className="pt-6">
+              <p className="text-red-700">Error loading dashboard data: {error}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {!user?.id && !loading && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center justify-center text-center space-y-4">
+                <h2 className="text-xl font-semibold">You don't have any weddings yet</h2>
+                <p className="text-muted-foreground">Create your first wedding invitation to get started</p>
+                <Link href="/dashboard/weddings/new">
+                  <Button className="bg-rose-500 hover:bg-rose-600">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Wedding Invitation
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {user?.id && !loading && (
+          <Tabs defaultValue="overview" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="guests">Guests</TabsTrigger>
+              <TabsTrigger value="gifts">Gifts</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Invitations</CardTitle>
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.invitations}</div>
+                    <p className="text-xs text-muted-foreground">Sent to your guests</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">RSVP Responses</CardTitle>
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.rsvpResponses}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {stats.responseRate > 0 ? `${stats.responseRate}% response rate` : "No responses yet"}
                     </p>
-                    <Button className="mt-3 w-full bg-rose-500 hover:bg-rose-600" size="sm">
-                      Test QR Scanner
-                    </Button>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Confirmed Guests</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.confirmedGuests}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {stats.attendingRate > 0 ? `${stats.attendingRate}% of responses` : "No confirmations yet"}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Gifts</CardTitle>
+                    <Gift className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {stats.totalGifts > 0 ? `Rp ${(stats.totalGifts / 1000000).toFixed(1)}M` : "No gifts yet"}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {stats.recentResponses.length > 0 ? `From ${stats.recentResponses.length} guests` : "Be patient"}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                <Card className="lg:col-span-4">
+                  <CardHeader>
+                    <CardTitle>RSVP Overview</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pl-2">
+                    <div className="h-[200px] w-full bg-muted/20 rounded-md flex items-center justify-center">
+                      <p className="text-muted-foreground">RSVP Chart Coming Soon</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="lg:col-span-3">
+                  <CardHeader>
+                    <CardTitle>Invitation Status</CardTitle>
+                    <CardDescription>Track your invitation delivery and response rates</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center">
+                            <div className="mr-2 h-3 w-3 rounded-full bg-rose-500" />
+                            <span>Sent</span>
+                          </div>
+                          <span className="font-medium">
+                            {stats.invitationsSent}/{stats.invitations}
+                          </span>
+                        </div>
+                        <Progress value={stats.invitations > 0 ? (stats.invitationsSent / stats.invitations) * 100 : 0} className="h-2" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center">
+                            <div className="mr-2 h-3 w-3 rounded-full bg-amber-500" />
+                            <span>Opened</span>
+                          </div>
+                          <span className="font-medium">
+                            {stats.invitationsOpened}/{stats.invitations}
+                          </span>
+                        </div>
+                        <Progress value={stats.invitations > 0 ? (stats.invitationsOpened / stats.invitations) * 100 : 0} className="h-2" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center">
+                            <div className="mr-2 h-3 w-3 rounded-full bg-green-500" />
+                            <span>Responded</span>
+                          </div>
+                          <span className="font-medium">
+                            {stats.rsvpResponses}/{stats.invitations}
+                          </span>
+                        </div>
+                        <Progress value={stats.invitations > 0 ? (stats.rsvpResponses / stats.invitations) * 100 : 0} className="h-2" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center">
+                            <div className="mr-2 h-3 w-3 rounded-full bg-blue-500" />
+                            <span>Attending</span>
+                          </div>
+                          <span className="font-medium">
+                            {stats.confirmedGuests}/{stats.rsvpResponses}
+                          </span>
+                        </div>
+                        <Progress value={stats.rsvpResponses > 0 ? (stats.confirmedGuests / stats.rsvpResponses) * 100 : 0} className="h-2" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Recent RSVP Responses</CardTitle>
+                    <CardDescription>
+                      {stats.recentResponses.length > 0 
+                        ? `You have received ${stats.recentResponses.length} responses`
+                        : "No RSVP responses yet"
+                      }
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {stats.recentResponses.length > 0 ? (
+                      <div className="space-y-4">
+                        {stats.recentResponses.map((response) => (
+                          <div key={response.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                            <div className="flex items-center space-x-3">
+                              <div className="space-y-1">
+                                <p className="font-medium leading-none">{response.name}</p>
+                                <p className="text-sm text-muted-foreground">{response.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center">
+                              <span 
+                                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                                  response.status === "attending" 
+                                    ? "bg-green-100 text-green-800" 
+                                    : response.status === "not-attending" 
+                                    ? "bg-red-100 text-red-800" 
+                                    : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                {response.status === "attending" 
+                                  ? "Attending" 
+                                  : response.status === "not-attending" 
+                                  ? "Not Attending" 
+                                  : "Pending"
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-32 text-muted-foreground">
+                        No RSVP responses yet
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Your Wedding</CardTitle>
+                    <CardDescription>Manage your wedding details</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-medium leading-none">Quick Actions</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 space-y-2" asChild>
+                          <Link href="/dashboard/guests">
+                            <Users className="h-5 w-5 text-rose-500" />
+                            <span className="text-xs">Manage Guests</span>
+                          </Link>
+                        </Button>
+                        <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 space-y-2" asChild>
+                          <Link href="/dashboard/qr">
+                            <QrCode className="h-5 w-5 text-rose-500" />
+                            <span className="text-xs">QR Check-in</span>
+                          </Link>
+                        </Button>
+                        <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 space-y-2" asChild>
+                          <Link href="/dashboard/settings">
+                            <Settings className="h-5 w-5 text-rose-500" />
+                            <span className="text-xs">Settings</span>
+                          </Link>
+                        </Button>
+                        <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 space-y-2" asChild>
+                          <Link href={`/wedding/preview`}>
+                            <Heart className="h-5 w-5 text-rose-500" />
+                            <span className="text-xs">Preview</span>
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            <TabsContent value="guests">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Guest Management</CardTitle>
+                  <CardDescription>Manage your guest list and invitations</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center py-8">
+                    <Link href="/dashboard/guests">
+                      <Button className="bg-rose-500 hover:bg-rose-600">Go to Guest Management</Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
-          <TabsContent value="guests" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Guest Management</CardTitle>
-                <CardDescription>Manage your guest list and track RSVPs</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
-                        All Guests
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        Attending
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        Not Attending
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        Pending
-                      </Button>
-                    </div>
-                    <Button size="sm" className="bg-rose-500 hover:bg-rose-600">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Guest
-                    </Button>
+            </TabsContent>
+            <TabsContent value="gifts">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gift Registry</CardTitle>
+                  <CardDescription>Manage your gift registry and track received gifts</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center py-8">
+                    <Link href="/dashboard/gifts">
+                      <Button className="bg-rose-500 hover:bg-rose-600">Go to Gift Registry</Button>
+                    </Link>
                   </div>
-                  <div className="rounded-md border">
-                    <div className="grid grid-cols-5 gap-4 p-4 font-medium border-b">
-                      <div>Name</div>
-                      <div>Email/Phone</div>
-                      <div>Group</div>
-                      <div>Status</div>
-                      <div className="text-right">Actions</div>
-                    </div>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="grid grid-cols-5 gap-4 p-4 border-b last:border-0 items-center">
-                        <div className="font-medium">Guest Name {i + 1}</div>
-                        <div className="text-sm text-muted-foreground">guest{i + 1}@example.com</div>
-                        <div className="text-sm">Family</div>
-                        <div>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              i % 3 === 0
-                                ? "bg-green-100 text-green-800"
-                                : i % 3 === 1
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {i % 3 === 0 ? "Attending" : i % 3 === 1 ? "Pending" : "Not Attending"}
-                          </span>
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="icon">
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M20 6 9 17l-5-5" />
-                            </svg>
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
-                            </svg>
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="settings">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Wedding Settings</CardTitle>
+                  <CardDescription>Customize your wedding details and preferences</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center py-8">
+                    <Link href="/dashboard/settings">
+                      <Button className="bg-rose-500 hover:bg-rose-600">Go to Settings</Button>
+                    </Link>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="gifts" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gift Registry & E-Angpao</CardTitle>
-                <CardDescription>Track gifts and digital cash transfers from your guests</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
-                        All Gifts
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        E-Angpao
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        Physical Gifts
-                      </Button>
-                    </div>
-                    <Button size="sm" className="bg-rose-500 hover:bg-rose-600">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Gift Item
-                    </Button>
-                  </div>
-                  <div className="rounded-md border">
-                    <div className="grid grid-cols-5 gap-4 p-4 font-medium border-b">
-                      <div>From</div>
-                      <div>Gift Type</div>
-                      <div>Amount/Item</div>
-                      <div>Date</div>
-                      <div className="text-right">Status</div>
-                    </div>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="grid grid-cols-5 gap-4 p-4 border-b last:border-0 items-center">
-                        <div className="font-medium">Guest Name {i + 1}</div>
-                        <div className="text-sm">{i % 2 === 0 ? "E-Angpao" : "Wishlist Item"}</div>
-                        <div className="text-sm">{i % 2 === 0 ? `Rp ${(i + 1) * 500}.000` : `Gift Item ${i + 1}`}</div>
-                        <div className="text-sm text-muted-foreground">June {i + 1}, 2025</div>
-                        <div className="text-right">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              i % 3 === 0
-                                ? "bg-green-100 text-green-800"
-                                : i % 3 === 1
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-amber-100 text-amber-800"
-                            }`}
-                          >
-                            {i % 3 === 0 ? "Received" : i % 3 === 1 ? "Thanked" : "Pending"}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="settings" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Wedding Details</CardTitle>
-                <CardDescription>Update your wedding information and preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <label htmlFor="bride-name" className="text-sm font-medium">
-                        Bride's Name
-                      </label>
-                      <input
-                        id="bride-name"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue="Putri Sari"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="groom-name" className="text-sm font-medium">
-                        Groom's Name
-                      </label>
-                      <input
-                        id="groom-name"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue="Budi Santoso"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="wedding-date" className="text-sm font-medium">
-                        Wedding Date
-                      </label>
-                      <input
-                        id="wedding-date"
-                        type="date"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue="2025-06-15"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="wedding-time" className="text-sm font-medium">
-                        Wedding Time
-                      </label>
-                      <input
-                        id="wedding-time"
-                        type="time"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue="15:00"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="venue" className="text-sm font-medium">
-                        Venue
-                      </label>
-                      <input
-                        id="venue"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue="Grand Ballroom, Hotel Indonesia Kempinski Jakarta"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="theme" className="text-sm font-medium">
-                        Theme
-                      </label>
-                      <select
-                        id="theme"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        defaultValue="modern"
-                      >
-                        <option value="modern">Modern</option>
-                        <option value="traditional">Traditional</option>
-                        <option value="islamic">Islamic</option>
-                        <option value="custom">Custom</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="story" className="text-sm font-medium">
-                      Your Love Story
-                    </label>
-                    <textarea
-                      id="story"
-                      className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      defaultValue="We first crossed paths at a coffee shop in Jakarta in 2020. What started as a casual conversation about our favorite books turned into hours of talking and laughing. Five years later, here we are, ready to begin our forever journey together."
-                    ></textarea>
-                  </div>
-                  <Button className="bg-rose-500 hover:bg-rose-600">Save Changes</Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        )}
       </main>
     </div>
   )
