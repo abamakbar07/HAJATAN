@@ -6,12 +6,11 @@ import { useAuth } from "@/providers/auth-provider"
 import {
   Calendar,
   ChevronDown,
+  Eye,
   Gift,
   Heart,
   Mail,
-  Menu,
   MessageSquare,
-  PieChart,
   Plus,
   QrCode,
   Settings,
@@ -152,11 +151,10 @@ export default function DashboardPage() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="guests">Guests</TabsTrigger>
-            <TabsTrigger value="gifts">Gifts</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="actions">Quick Actions</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Invitations</CardTitle>
@@ -191,33 +189,9 @@ export default function DashboardPage() {
                   </p>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Gifts</CardTitle>
-                  <Gift className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {stats.totalGifts > 0 ? `Rp ${(stats.totalGifts / 1000000).toFixed(1)}M` : "No gifts yet"}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.recentResponses.length > 0 ? `From ${stats.recentResponses.length} guests` : "Be patient"}
-                  </p>
-                </CardContent>
-              </Card>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <Card className="lg:col-span-4">
-                <CardHeader>
-                  <CardTitle>RSVP Overview</CardTitle>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  <div className="h-[200px] w-full bg-muted/20 rounded-md flex items-center justify-center">
-                    <p className="text-muted-foreground">RSVP Chart Coming Soon</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="lg:col-span-3">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
                 <CardHeader>
                   <CardTitle>Invitation Status</CardTitle>
                   <CardDescription>Track your invitation delivery and response rates</CardDescription>
@@ -260,155 +234,117 @@ export default function DashboardPage() {
                       </div>
                       <Progress value={stats.invitations > 0 ? (stats.rsvpResponses / stats.invitations) * 100 : 0} className="h-2" />
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center">
-                          <div className="mr-2 h-3 w-3 rounded-full bg-blue-500" />
-                          <span>Attending</span>
-                        </div>
-                        <span className="font-medium">
-                          {stats.confirmedGuests}/{stats.rsvpResponses}
-                        </span>
-                      </div>
-                      <Progress value={stats.rsvpResponses > 0 ? (stats.confirmedGuests / stats.rsvpResponses) * 100 : 0} className="h-2" />
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Recent RSVP Responses</CardTitle>
-                  <CardDescription>
-                    {stats.recentResponses.length > 0 
-                      ? `You have received ${stats.recentResponses.length} responses`
-                      : "No RSVP responses yet"
-                    }
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {stats.recentResponses.length > 0 ? (
-                    <div className="space-y-4">
-                      {stats.recentResponses.map((response) => (
-                        <div key={response.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                          <div className="flex items-center space-x-3">
-                            <div className="space-y-1">
-                              <p className="font-medium leading-none">{response.name}</p>
-                              <p className="text-sm text-muted-foreground">{response.email}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            <span 
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                                response.status === "attending" 
-                                  ? "bg-green-100 text-green-800" 
-                                  : response.status === "not-attending" 
-                                  ? "bg-red-100 text-red-800" 
-                                  : "bg-amber-100 text-amber-800"
-                              }`}
-                            >
-                              {response.status === "attending" 
-                                ? "Attending" 
-                                : response.status === "not-attending" 
-                                ? "Not Attending" 
-                                : "Pending"
-                              }
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-32 text-muted-foreground">
-                      No RSVP responses yet
-                    </div>
-                  )}
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle>Your Wedding</CardTitle>
-                  <CardDescription>Manage your wedding details</CardDescription>
+                  <CardTitle>Recent Responses</CardTitle>
+                  <CardDescription>Latest guests who have responded to your invitation</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="font-medium leading-none">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 space-y-2" asChild>
-                        <Link href="/dashboard/guests">
-                          <Users className="h-5 w-5 text-rose-500" />
-                          <span className="text-xs">Manage Guests</span>
-                        </Link>
-                      </Button>
-                      <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 space-y-2" asChild>
-                        <Link href="/dashboard/qr">
-                          <QrCode className="h-5 w-5 text-rose-500" />
-                          <span className="text-xs">QR Check-in</span>
-                        </Link>
-                      </Button>
-                      <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 space-y-2" asChild>
-                        <Link href="/dashboard/settings">
-                          <Settings className="h-5 w-5 text-rose-500" />
-                          <span className="text-xs">Settings</span>
-                        </Link>
-                      </Button>
-                      <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 space-y-2" asChild>
-                        <Link href={`/wedding/preview`}>
-                          <Heart className="h-5 w-5 text-rose-500" />
-                          <span className="text-xs">Preview</span>
-                        </Link>
-                      </Button>
+                <CardContent>
+                  {stats.recentResponses.length === 0 ? (
+                    <div className="text-center py-6 text-muted-foreground">
+                      No responses yet
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {stats.recentResponses.slice(0, 5).map((response) => (
+                        <div
+                          key={response.id}
+                          className="flex items-center justify-between border-b pb-2 last:border-0"
+                        >
+                          <div>
+                            <p className="font-medium">{response.name}</p>
+                            <p className="text-xs text-muted-foreground">{response.email}</p>
+                          </div>
+                          <div className={`text-sm px-2 py-1 rounded-full ${
+                            response.status === "attending" 
+                              ? "bg-green-100 text-green-700" 
+                              : response.status === "not-attending"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}>
+                            {response.status === "attending" 
+                              ? "Attending" 
+                              : response.status === "not-attending"
+                              ? "Not Attending"
+                              : "Pending"}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
-          <TabsContent value="guests">
+          <TabsContent value="guests" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">Guest Management</h3>
+              <Link href="/dashboard/guest-management">
+                <Button variant="outline" size="sm">
+                  View All Guests
+                </Button>
+              </Link>
+            </div>
             <Card>
-              <CardHeader>
-                <CardTitle>Guest Management</CardTitle>
-                <CardDescription>Manage your guest list and invitations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-center py-8">
-                  <Link href="/dashboard/guests">
-                    <Button className="bg-rose-500 hover:bg-rose-600">Go to Guest Management</Button>
+              <CardContent className="p-6">
+                <div className="text-center py-8">
+                  <Link href="/dashboard/guest-management">
+                    <Button>
+                      <Users className="mr-2 h-4 w-4" />
+                      Manage Guests
+                    </Button>
                   </Link>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="gifts">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gift Registry</CardTitle>
-                <CardDescription>Manage your gift registry and track received gifts</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-center py-8">
-                  <Link href="/dashboard/gifts">
-                    <Button className="bg-rose-500 hover:bg-rose-600">Go to Gift Registry</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Wedding Settings</CardTitle>
-                <CardDescription>Customize your wedding details and preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-center py-8">
-                  <Link href="/dashboard/settings">
-                    <Button className="bg-rose-500 hover:bg-rose-600">Go to Settings</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="actions" className="space-y-4">
+            <h3 className="text-lg font-medium">Quick Actions</h3>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+              <Card className="col-span-1">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col items-center gap-2">
+                    <Link href={`/wedding/preview`} className="flex flex-col items-center">
+                      <Eye className="h-8 w-8 text-rose-500" />
+                      <span className="text-xs">Preview Invitation</span>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="col-span-1">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col items-center gap-2">
+                    <Link href="/dashboard/weddings/edit" className="flex flex-col items-center">
+                      <Settings className="h-8 w-8 text-rose-500" />
+                      <span className="text-xs">Edit Wedding</span>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="col-span-1">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col items-center gap-2">
+                    <Link href="/dashboard/check-in" className="flex flex-col items-center">
+                      <QrCode className="h-8 w-8 text-rose-500" />
+                      <span className="text-xs">QR Check-in</span>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="col-span-1">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col items-center gap-2">
+                    <Link href="/dashboard/guest-management/share" className="flex flex-col items-center">
+                      <Heart className="h-8 w-8 text-rose-500" />
+                      <span className="text-xs">Share Invitation</span>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       )}

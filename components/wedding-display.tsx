@@ -53,12 +53,27 @@ export default function WeddingDisplay({ wedding, isPreview = false }: WeddingDi
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-primary-100">
       {isPreview && (
-        <div className="sticky top-0 z-50 bg-amber-500 text-amber-950 text-center py-2 shadow-md">
-          <p className="font-semibold">Preview Mode - This is how your wedding invitation will look</p>
-          <div className="text-sm">
-            <Link href="/dashboard" className="underline hover:text-amber-800">Return to Dashboard</Link>
-            {' • '}
-            <Link href={`/dashboard/weddings/${wedding._id}/edit`} className="underline hover:text-amber-800">Edit Wedding</Link>
+        <div className="sticky top-0 z-50 bg-amber-500 text-amber-950 text-center py-3 shadow-md">
+          <p className="font-semibold text-base">Preview Mode - This is how your wedding invitation will look</p>
+          <div className="flex justify-center gap-4 mt-1">
+            <Link href="/dashboard" className="text-sm font-medium flex items-center hover:text-amber-800">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Dashboard
+            </Link>
+            <Link href={`/dashboard/weddings/${wedding._id}/edit`} className="text-sm font-medium flex items-center hover:text-amber-800">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Wedding
+            </Link>
+            <Link href="/dashboard/guest-management/share" className="text-sm font-medium flex items-center hover:text-amber-800">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Share
+            </Link>
           </div>
         </div>
       )}
