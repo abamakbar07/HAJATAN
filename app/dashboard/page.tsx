@@ -32,6 +32,7 @@ interface DashboardStats {
   invitationsOpened: number;
   responseRate: number;
   attendingRate: number;
+  weddingId: string;
   recentResponses: Array<{
     id: string;
     name: string;
@@ -52,6 +53,7 @@ export default function DashboardPage() {
     invitationsOpened: 0,
     responseRate: 0,
     attendingRate: 0,
+    weddingId: "",
     recentResponses: [],
   })
   const [loading, setLoading] = useState(true)
@@ -317,9 +319,9 @@ export default function DashboardPage() {
               <Card className="col-span-1">
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center gap-2">
-                    <Link href="/dashboard/weddings/edit" className="flex flex-col items-center">
+                    <Link href={weddingDate ? `/dashboard/weddings/${encodeURIComponent(stats.weddingId || '')}/edit` : "/dashboard/weddings/new"} className="flex flex-col items-center">
                       <Settings className="h-8 w-8 text-rose-500" />
-                      <span className="text-xs">Edit Wedding</span>
+                      <span className="text-xs">{weddingDate ? "Edit Wedding" : "Create Wedding"}</span>
                     </Link>
                   </div>
                 </CardContent>
