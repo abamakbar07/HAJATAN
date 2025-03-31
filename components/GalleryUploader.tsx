@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { uploadImage, deleteImage } from '@/lib/cloudinary';
+import { deleteImage } from '@/lib/cloudinary';
 import { useToast } from '@/hooks/use-toast';
 import { X, Upload, Loader2 } from 'lucide-react';
 
@@ -27,8 +27,25 @@ export default function GalleryUploader({ existingImages = [], onImagesChange }:
       
       for (let i = 0; i < e.target.files.length; i++) {
         const file = e.target.files[i];
-        const imageUrl = await uploadImage(file);
-        uploadedUrls.push(imageUrl);
+        
+        // Create FormData
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Upload using our server-side endpoint
+        const response = await fetch('/api/cloudinary/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Upload error:', error);
+          throw new Error(`Upload failed: ${error.error || 'Unknown error'}`);
+        }
+        
+        const result = await response.json();
+        uploadedUrls.push(result.secure_url);
       }
       
       const newImages = [...images, ...uploadedUrls];
@@ -126,4 +143,4 @@ export default function GalleryUploader({ existingImages = [], onImagesChange }:
       )}
     </div>
   );
-} 
+}

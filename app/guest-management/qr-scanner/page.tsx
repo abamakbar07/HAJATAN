@@ -1,10 +1,6 @@
-import { Metadata } from 'next';
-import QRCodeScanner from '@/components/QRCodeScanner';
+'use client'
 
-export const metadata: Metadata = {
-  title: 'QR Code Scanner | HAJATAN',
-  description: 'Scan QR codes to check in guests at your wedding event.',
-};
+import QRCodeScanner from '@/components/QRCodeScanner';
 
 export default function QRScannerPage() {
   const handleScan = async (data: string) => {
