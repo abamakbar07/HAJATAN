@@ -119,9 +119,6 @@ importers:
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
-      cloudinary:
-        specifier: ^2.6.0
-        version: 2.6.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -161,6 +158,9 @@ importers:
       next-auth:
         specifier: latest
         version: 4.24.11(@auth/core@0.38.0(nodemailer@6.10.0))(next@15.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nodemailer@6.10.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      next-cloudinary:
+        specifier: ^5.20.0
+        version: 5.20.0(next@15.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       next-themes:
         specifier: ^0.4.4
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -374,6 +374,21 @@ packages:
   '@babel/runtime@7.27.0':
     resolution: {integrity: sha512-VtPOkrdPHZsKc/clNqyi9WUA8TINkZ4cGk63UUE3u4pmB2k+ZMQRDuIOagv8UVd6j7k0T3+RRIb7beKTebNbcw==}
     engines: {node: '>=6.9.0'}
+
+  '@cloudinary-util/url-loader@4.2.0':
+    resolution: {integrity: sha512-fpCFqFPAN/f9Gt//25qLXNDYwy5EcOudRzDPOrsEBH6aMwEdFaJuPxvLiP0IP5MCihKji/XDr9QJQ9Wa+amNSA==}
+
+  '@cloudinary-util/util@2.4.0':
+    resolution: {integrity: sha512-RJW/K1hvm+qL2civTWgg7iKdTPDMLmpFBvH03KUkDxuDk/xi9E9x9nPthEsmdDy65GdCcZm0UKnErXXgKzMOQQ==}
+
+  '@cloudinary-util/util@3.0.0':
+    resolution: {integrity: sha512-o6cJsN49OIelLcSkqUf4WzgefpePDFsAaeQfJbpcKhVdtvmWv71K0oZwMXuX62IY1OolqIg0etMiHtWZPhvPNA==}
+
+  '@cloudinary/transformation-builder-sdk@1.16.1':
+    resolution: {integrity: sha512-Mh1qYMkoDxSAzbt0qY9NJaZrdH/vFBcrpeVWmbTXbPVDZHLaaLyJ2+RDFGger5lycbrehPLoNp2hh22BvhkvbQ==}
+
+  '@cloudinary/url-gen@1.15.0':
+    resolution: {integrity: sha512-bjU67eZxLUgoRy/Plli4TQio7q6P31OYqnEgXxeN9TKXrzr6h0DeEdIUhKI9gy3HkEBWXWWJIPh7j7gkOJPnyA==}
 
   '@emnapi/runtime@1.4.0':
     resolution: {integrity: sha512-64WYIf4UYcdLnbKn/umDlNjQDSS8AgZrI/R9+x5ilkUVFxXcA1Ebl+gQLc/6mERA4407Xof0R7wEyEuj091CVw==}
@@ -1643,10 +1658,6 @@ packages:
   cliui@6.0.0:
     resolution: {integrity: sha512-t6wbgtoCXvAzst7QgXxJYqPt0usEfbgQdftEPbLL/cvv6HPE5VgvqCuAIDR0NgU52ds6rFwqrgakNLrHEjCbrQ==}
 
-  cloudinary@2.6.0:
-    resolution: {integrity: sha512-FIlny9RR5LPgkMioG4V7yUpC6ASyIFQMWfx4TgOi/xBeLxJTegbyQc3itiXL0b0lDlSaL0KyT2THEw6osrKqpQ==}
-    engines: {node: '>=9'}
-
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
@@ -2127,6 +2138,12 @@ packages:
       nodemailer:
         optional: true
 
+  next-cloudinary@5.20.0:
+    resolution: {integrity: sha512-oEe//iguL/fZAJH2zTSs0Kyfv6k0vhXoA07L1rX4UzQrqEmyT741UwwasnYN1qOYSZuLdum97CbJO9JkDARwIQ==}
+    peerDependencies:
+      next: ^12 || ^13 || ^14
+      react: ^17 || ^18
+
   next-themes@0.4.6:
     resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
     peerDependencies:
@@ -2343,14 +2360,6 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
-
-  q@1.5.1:
-    resolution: {integrity: sha512-kV/CThkXo6xyFEZUugw/+pIOywXcDbFYgSct5cT3gqlbkBE1SJdwy6UQoZvodiWF/ckQLZyDE/Bu1M6gVu5lVw==}
-    engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
-    deprecated: |-
-      You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
-
-      (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qrcode.react@4.2.0:
     resolution: {integrity: sha512-QpgqWi8rD9DsS9EP3z7BT+5lY5SFhsqGjpgW5DY/i3mK4M9DTBNz3ErMi8BWYEfI3L0d8GIbGmcdFAS1uIRGjA==}
@@ -3187,6 +3196,24 @@ snapshots:
   '@babel/runtime@7.27.0':
     dependencies:
       regenerator-runtime: 0.14.1
+
+  '@cloudinary-util/url-loader@4.2.0':
+    dependencies:
+      '@cloudinary-util/util': 3.0.0
+      '@cloudinary/url-gen': 1.15.0
+      zod: 3.24.2
+
+  '@cloudinary-util/util@2.4.0': {}
+
+  '@cloudinary-util/util@3.0.0': {}
+
+  '@cloudinary/transformation-builder-sdk@1.16.1':
+    dependencies:
+      '@cloudinary/url-gen': 1.15.0
+
+  '@cloudinary/url-gen@1.15.0':
+    dependencies:
+      '@cloudinary/transformation-builder-sdk': 1.16.1
 
   '@emnapi/runtime@1.4.0':
     dependencies:
@@ -4515,11 +4542,6 @@ snapshots:
       strip-ansi: 6.0.1
       wrap-ansi: 6.2.0
 
-  cloudinary@2.6.0:
-    dependencies:
-      lodash: 4.17.21
-      q: 1.5.1
-
   clsx@2.1.1: {}
 
   cmdk@1.0.4(@types/react-dom@19.0.4(@types/react@19.0.12))(@types/react@19.0.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
@@ -4960,6 +4982,13 @@ snapshots:
       '@auth/core': 0.38.0(nodemailer@6.10.0)
       nodemailer: 6.10.0
 
+  next-cloudinary@5.20.0(next@15.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0):
+    dependencies:
+      '@cloudinary-util/url-loader': 4.2.0
+      '@cloudinary-util/util': 2.4.0
+      next: 15.1.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+
   next-themes@0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -5151,8 +5180,6 @@ snapshots:
       once: 1.4.0
 
   punycode@2.3.1: {}
-
-  q@1.5.1: {}
 
   qrcode.react@4.2.0(react@19.1.0):
     dependencies:

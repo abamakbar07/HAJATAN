@@ -1,13 +1,12 @@
-import { v2 as cloudinary } from 'cloudinary'
+// Using next-cloudinary package instead of cloudinary
+import { CldUploadWidget } from 'next-cloudinary';
 
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
+// Export CldUploadWidget for direct usage in components
+export { CldUploadWidget };
 
-export default cloudinary;
+// Environment variables that should be used with next-cloudinary
+// NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is already being used
+// The rest of the configuration is handled by next-cloudinary automatically
 
 export const uploadImage = async (file: File): Promise<string> => {
   const formData = new FormData();
@@ -53,4 +52,4 @@ export const deleteImage = async (imageUrl: string): Promise<void> => {
     console.error('Error deleting image:', error);
     throw error;
   }
-}; 
+};
