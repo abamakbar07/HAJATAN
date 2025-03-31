@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import CountdownTimer from '@/components/CountdownTimer';
 import LoveStory from '@/components/LoveStory';
 import VenueMap from '@/components/VenueMap';
-import PhotoGallery from '@/components/PhotoGallery';
+import PhotoGallery, { GalleryLayout, GalleryEffect } from '@/components/PhotoGallery';
 import MusicPlayer from '@/components/MusicPlayer';
 import RSVPForm from '@/components/RSVPForm';
 import WeddingCover from '@/components/WeddingCover';
@@ -21,6 +21,21 @@ interface Event {
   description?: string;
 }
 
+interface ThemeConfig {
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+  headerStyle: string;
+  backgroundImage?: string;
+}
+
+interface GalleryConfig {
+  spacing: number;
+  showCaptions: boolean;
+  borderRadius: number;
+  effect: GalleryEffect;
+}
+
 interface WeddingDisplayProps {
   wedding: {
     _id: string;
@@ -32,8 +47,12 @@ interface WeddingDisplayProps {
     address: string;
     city: string;
     country: string;
+    theme: string;
+    themeConfig?: ThemeConfig;
     story?: string;
     gallery?: string[];
+    galleryLayout?: GalleryLayout;
+    galleryConfig?: GalleryConfig;
     slug: string;
     events?: Event[];
     parentNames?: {
@@ -65,6 +84,25 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
     day: 'numeric',
   });
   
+  // Theme defaults if not provided
+  const themeConfig = wedding.themeConfig || {
+    primaryColor: '#000000',
+    secondaryColor: '#ffffff',
+    fontFamily: 'Inter',
+    headerStyle: 'centered'
+  };
+  
+  // Gallery config defaults if not provided
+  const galleryConfig = wedding.galleryConfig || {
+    spacing: 8,
+    showCaptions: false,
+    borderRadius: 8,
+    effect: 'zoom' as GalleryEffect
+  };
+  
+  // Gallery layout default if not provided
+  const galleryLayout = wedding.galleryLayout || 'grid';
+  
   // Sample music URL - in a real app, you would get this from the wedding model
   const musicUrl = "https://example.com/sample-music.mp3";
 
@@ -82,6 +120,14 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
     ? "max-w-sm mx-auto border-x border-gray-300 shadow-lg h-[80vh] overflow-y-auto"
     : "";
 
+  // Apply theme styling to the entire content
+  const themeStyles = {
+    fontFamily: themeConfig.fontFamily || 'Inter',
+    '--primary-color': themeConfig.primaryColor,
+    '--secondary-color': themeConfig.secondaryColor,
+    backgroundImage: themeConfig.backgroundImage ? `url(${themeConfig.backgroundImage})` : 'none',
+  } as React.CSSProperties;
+
   return (
     <>
       {/* Cover Component */}
@@ -93,10 +139,14 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
           guestName={guestName}
           coverImage={wedding.gallery?.[0]}
           onOpen={handleOpenInvitation}
+          themeConfig={themeConfig}
         />
       )}
       
-      <div className={`min-h-screen bg-gradient-to-b from-primary-50 to-primary-100 transition-opacity duration-700 ease-in-out ${!showCover ? 'block' : 'hidden'} ${contentVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div 
+        className={`min-h-screen transition-opacity duration-700 ease-in-out ${!showCover ? 'block' : 'hidden'} ${contentVisible ? 'opacity-100' : 'opacity-0'}`}
+        style={themeStyles}
+      >
         {isPreview && (
           <div className="sticky top-0 z-50 bg-amber-500 text-amber-950 text-center py-3 shadow-md">
             <p className="font-semibold text-base">Preview Mode - This is how your wedding invitation will look</p>
@@ -141,7 +191,13 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
           <MusicPlayer url={musicUrl} />
           
           {/* Hero Section */}
-          <section className="relative h-screen flex items-center justify-center">
+          <section 
+            className="relative h-screen flex items-center justify-center"
+            style={{
+              backgroundColor: themeConfig.primaryColor,
+              color: themeConfig.secondaryColor,
+            }}
+          >
             {wedding.gallery && wedding.gallery.length > 0 ? (
               <div className="absolute inset-0 z-0">
                 <Image
@@ -179,7 +235,10 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
                 </div>
               )}
               
-              <h1 className="text-4xl md:text-6xl font-serif mb-4">
+              <h1 
+                className="text-4xl md:text-6xl mb-4"
+                style={{ fontFamily: themeConfig.fontFamily }}
+              >
                 {wedding.brideName} <span className="text-2xl md:text-3xl">&</span> {wedding.groomName}
               </h1>
               <p className="text-xl mb-8">REQUEST THE HONOR OF YOUR PRESENCE</p>
@@ -249,7 +308,11 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
             {/* Photo Gallery Section */}
             {wedding.gallery && wedding.gallery.length > 0 && (
               <section id="gallery" className="bg-white rounded-lg shadow-lg p-8">
-                <PhotoGallery images={wedding.gallery} />
+                <PhotoGallery 
+                  images={wedding.gallery} 
+                  layout={galleryLayout as GalleryLayout}
+                  config={galleryConfig}
+                />
               </section>
             )}
             
@@ -261,8 +324,16 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
           </div>
           
           {/* Footer */}
-          <footer className="bg-primary text-white py-6 text-center">
-            <p className="text-lg font-serif mb-2">{wedding.brideName} & {wedding.groomName}</p>
+          <footer 
+            className="py-6 text-center"
+            style={{
+              backgroundColor: themeConfig.primaryColor,
+              color: themeConfig.secondaryColor,
+            }}
+          >
+            <p className="text-lg mb-2" style={{ fontFamily: themeConfig.fontFamily }}>
+              {wedding.brideName} & {wedding.groomName}
+            </p>
             <p className="text-sm">{formattedDate}</p>
             <p className="text-xs mt-4">Powered by HAJATAN</p>
           </footer>

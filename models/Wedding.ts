@@ -11,6 +11,13 @@ export interface IWedding extends Document {
   city: string
   country: string
   theme: string
+  themeConfig: {
+    primaryColor: string
+    secondaryColor: string
+    fontFamily: string
+    headerStyle: string
+    backgroundImage?: string
+  }
   story: string
   slug: string
   isPrivate: boolean
@@ -25,6 +32,13 @@ export interface IWedding extends Document {
     description: string
   }>
   gallery: string[]
+  galleryLayout: string
+  galleryConfig: {
+    spacing: number
+    showCaptions: boolean
+    borderRadius: number
+    effect: string
+  }
   createdAt: Date
   updatedAt: Date
 }
@@ -41,6 +55,13 @@ const WeddingSchema: Schema = new Schema(
     city: { type: String, required: true },
     country: { type: String, required: true },
     theme: { type: String, default: "modern" },
+    themeConfig: {
+      primaryColor: { type: String, default: "#000000" },
+      secondaryColor: { type: String, default: "#ffffff" },
+      fontFamily: { type: String, default: "Inter" },
+      headerStyle: { type: String, default: "centered" },
+      backgroundImage: { type: String }
+    },
     story: { type: String },
     slug: { type: String, required: true, unique: true },
     isPrivate: { type: Boolean, default: false },
@@ -57,6 +78,13 @@ const WeddingSchema: Schema = new Schema(
       },
     ],
     gallery: [{ type: String }],
+    galleryLayout: { type: String, default: "grid" },
+    galleryConfig: {
+      spacing: { type: Number, default: 8 },
+      showCaptions: { type: Boolean, default: false },
+      borderRadius: { type: Number, default: 8 },
+      effect: { type: String, default: "zoom" }
+    }
   },
   { timestamps: true },
 )

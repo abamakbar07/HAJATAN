@@ -3,6 +3,14 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
+interface ThemeConfig {
+  primaryColor: string;
+  secondaryColor: string;
+  fontFamily: string;
+  headerStyle: string;
+  backgroundImage?: string;
+}
+
 interface WeddingCoverProps {
   brideName: string;
   groomName: string;
@@ -10,6 +18,7 @@ interface WeddingCoverProps {
   guestName?: string;
   coverImage?: string;
   onOpen: () => void;
+  themeConfig?: ThemeConfig;
 }
 
 export default function WeddingCover({ 
@@ -18,10 +27,19 @@ export default function WeddingCover({
   date, 
   guestName = 'Dear Guest', 
   coverImage,
-  onOpen 
+  onOpen,
+  themeConfig
 }: WeddingCoverProps) {
   const [isOpening, setIsOpening] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  
+  // Use provided theme config or defaults
+  const theme = themeConfig || {
+    primaryColor: '#000000',
+    secondaryColor: '#ffffff',
+    fontFamily: 'Inter',
+    headerStyle: 'centered'
+  };
   
   // Format the date nicely
   const formattedDate = new Date(date).toLocaleDateString('en-US', {
@@ -49,7 +67,13 @@ export default function WeddingCover({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-b from-rose-100 to-rose-200">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ 
+        backgroundImage: theme.backgroundImage ? `url(${theme.backgroundImage})` : 'none',
+        backgroundColor: theme.backgroundImage ? 'transparent' : theme.primaryColor,
+      }}
+    >
       <div 
         className={`relative max-w-md w-full bg-white rounded-lg shadow-2xl overflow-hidden transition-all duration-500 ease-in-out ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}
       >
@@ -64,11 +88,17 @@ export default function WeddingCover({
               priority
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-b from-rose-300 to-rose-500"></div>
+            <div 
+              className="absolute inset-0" 
+              style={{ backgroundColor: theme.primaryColor }}
+            ></div>
           )}
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <div className="text-center text-white px-4">
-              <h1 className="text-3xl md:text-4xl font-serif mb-2 leading-tight">
+              <h1 
+                className="text-3xl md:text-4xl mb-2 leading-tight"
+                style={{ fontFamily: theme.fontFamily }}
+              >
                 {brideName} & {groomName}
               </h1>
               <p className="text-lg">{formattedDate}</p>
@@ -81,12 +111,21 @@ export default function WeddingCover({
           className={`p-8 text-center transition-all duration-500 ease-in-out ${isOpening ? 'opacity-0 -translate-y-6' : 'opacity-100 translate-y-0'}`}
         >
           <h2 className="text-2xl font-medium mb-3">Wedding Invitation</h2>
-          <p className="text-xl mb-6 font-serif">{guestName}</p>
+          <p 
+            className="text-xl mb-6"
+            style={{ fontFamily: theme.fontFamily }}
+          >
+            {guestName}
+          </p>
           <p className="mb-8">You are cordially invited to celebrate our wedding</p>
           
           <button
             onClick={handleOpen}
-            className="px-8 py-3 bg-primary text-white rounded-full font-medium shadow-md hover:bg-primary-dark transition-colors duration-200"
+            className="px-8 py-3 rounded-full font-medium shadow-md transition-colors duration-200"
+            style={{ 
+              backgroundColor: theme.primaryColor,
+              color: theme.secondaryColor
+            }}
           >
             Open Invitation
           </button>
