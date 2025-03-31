@@ -58,7 +58,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-12">
+    <>
       <div className="mb-8">
         <h1 className="text-3xl font-bold">My Profile</h1>
         <p className="text-muted-foreground">Manage your account information</p>
@@ -125,6 +125,6 @@ export default function ProfilePage() {
           </form>
         </Card>
       </div>
-    </div>
+    </>
   )
 } 

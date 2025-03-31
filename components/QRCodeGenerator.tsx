@@ -1,101 +1,74 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
-import { Download, Share2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface QRCodeGeneratorProps {
   value: string;
   size?: number;
-  className?: string;
-  guestName: string;
+  guestName?: string;
+  downloadable?: boolean;
 }
 
-export default function QRCodeGenerator({ value, size = 256, className, guestName }: QRCodeGeneratorProps) {
-  const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
-  const [canShare, setCanShare] = useState(false);
-  
-  useEffect(() => {
-    // Check if the Web Share API is available
-    setCanShare(!!navigator.share);
-  }, []);
-  
-  const downloadQRCode = () => {
-    if (!canvasRef) return;
-    
-    const canvas = canvasRef;
-    const image = canvas.toDataURL("image/png");
-    const link = document.createElement('a');
-    link.href = image;
-    link.download = `qr-code-${guestName.replace(/\s+/g, '-').toLowerCase()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-  
-  const shareQRCode = async () => {
-    if (!canvasRef || !canShare) return;
-    
-    const canvas = canvasRef;
-    
+export default function QRCodeGenerator({
+  value,
+  size = 200,
+  guestName,
+  downloadable = true,
+}: QRCodeGeneratorProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = () => {
+    setIsDownloading(true);
     try {
-      // Convert canvas to blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          }
-        }, 'image/png');
-      });
-      
-      // Create file from blob
-      const file = new File([blob], `qr-code-${guestName.replace(/\s+/g, '-').toLowerCase()}.png`, { type: 'image/png' });
-      
-      // Share the file
-      await navigator.share({
-        title: 'Wedding QR Code',
-        text: `QR Code for ${guestName}`,
-        files: [file],
-      });
+      const canvas = document.getElementById('guest-qr-code') as HTMLCanvasElement;
+      if (!canvas) return;
+
+      const url = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invitation-qr-${guestName ? guestName.replace(/\s+/g, '-').toLowerCase() : 'guest'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error('Error sharing:', error);
+      console.error('Error downloading QR code:', error);
+    } finally {
+      setIsDownloading(false);
     }
   };
-  
+
   return (
-    <div className={`flex flex-col items-center ${className}`}>
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <QRCodeCanvas
-          value={value}
-          size={size}
-          level="H"
-          includeMargin
-          ref={(el: HTMLCanvasElement | null) => setCanvasRef(el)}
-        />
-      </div>
-      
-      <div className="flex gap-2 mt-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-2"
-          onClick={downloadQRCode}
-        >
-          <Download size={16} />
-          Download
-        </Button>
+    <Card className="w-fit mx-auto shadow-md">
+      <CardContent className="p-6 text-center">
+        <div className="bg-white p-4 rounded-lg inline-block">
+          <QRCodeCanvas
+            id="guest-qr-code"
+            value={value}
+            size={size}
+            level="H"
+            includeMargin
+          />
+        </div>
         
-        {canShare && (
+        {guestName && (
+          <div className="mt-4 text-lg font-medium">
+            {guestName}
+          </div>
+        )}
+        
+        {downloadable && (
           <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-2"
-            onClick={shareQRCode}
+            onClick={handleDownload} 
+            className="mt-4" 
+            disabled={isDownloading}
           >
-            <Share2 size={16} />
-            Share
+            {isDownloading ? 'Downloading...' : 'Download QR Code'}
           </Button>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 } 

@@ -13,10 +13,23 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip"
 
 export function Navbar() {
   const { user, status, signOut } = useAuth()
   const isAuthenticated = status === "authenticated"
+
+  // Define navigation items with implementation status
+  const navItems = [
+    { href: "/dashboard", label: "Dashboard", implemented: true },
+    { href: "/explore", label: "Explore Themes", implemented: false },
+    { href: "/pricing", label: "Pricing", implemented: false },
+  ]
 
   return (
     <nav className="border-b bg-white">
@@ -31,9 +44,31 @@ export function Navbar() {
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-rose-500">
-                Dashboard
-              </Link>
+              <TooltipProvider>
+                {navItems.map((item) => (
+                  item.implemented ? (
+                    <Link 
+                      key={item.href}
+                      href={item.href} 
+                      className="text-sm font-medium text-gray-700 hover:text-rose-500"
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <Tooltip key={item.label}>
+                      <TooltipTrigger asChild>
+                        <span className="text-sm font-medium text-gray-400 cursor-not-allowed">
+                          {item.label}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Coming soon</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                ))}
+              </TooltipProvider>
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">

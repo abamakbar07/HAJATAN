@@ -84,7 +84,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-12">
+    <>
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Manage your account settings and preferences</p>
@@ -184,6 +184,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </>
   )
 } 
