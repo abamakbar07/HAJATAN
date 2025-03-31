@@ -6,6 +6,39 @@ import dbConnect from '@/lib/mongodb';
 import Wedding from '@/models/Wedding';
 import WeddingDisplay from '@/components/wedding-display';
 
+// Define the same interface as in the [slug]/page.tsx for consistency
+interface WeddingData {
+  _id: string;
+  brideName: string;
+  groomName: string;
+  date: Date | string;
+  time: string;
+  venue: string;
+  address: string;
+  city: string;
+  country: string;
+  story?: string;
+  gallery?: string[];
+  slug: string;
+  events?: Array<{
+    title: string;
+    date: Date | string;
+    time: string;
+    venue: string;
+    description?: string;
+  }>;
+  parentNames?: {
+    bride?: {
+      father?: string;
+      mother?: string;
+    };
+    groom?: {
+      father?: string;
+      mother?: string;
+    };
+  };
+}
+
 export const metadata: Metadata = {
   title: 'Wedding Preview',
   description: 'Preview your wedding invitation',
@@ -22,9 +55,9 @@ export default async function WeddingPreviewPage() {
   await dbConnect();
   
   // Find the wedding belonging to the current user
-  const weddingData = await Wedding.findOne({ userId: session.user.id }).lean();
+  const weddingDoc = await Wedding.findOne({ userId: session.user.id }).lean();
   
-  if (!weddingData) {
+  if (!weddingDoc) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
         <h1 className="text-2xl font-bold mb-4">No Wedding Found</h1>
@@ -41,5 +74,11 @@ export default async function WeddingPreviewPage() {
     );
   }
   
-  return <WeddingDisplay wedding={weddingData} isPreview={true} />;
+  // Convert mongo document to plain object
+  const wedding = JSON.parse(JSON.stringify(weddingDoc)) as WeddingData;
+  
+  // Use a sample guest name for preview
+  const sampleGuestName = "Preview Guest";
+  
+  return <WeddingDisplay wedding={wedding} isPreview={true} guestName={sampleGuestName} />;
 } 

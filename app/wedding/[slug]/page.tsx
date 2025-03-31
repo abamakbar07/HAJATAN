@@ -34,6 +34,16 @@ interface WeddingData {
     venue: string;
     description?: string;
   }>;
+  parentNames?: {
+    bride?: {
+      father?: string;
+      mother?: string;
+    };
+    groom?: {
+      father?: string;
+      mother?: string;
+    };
+  };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -69,6 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function WeddingPage({ params, searchParams }: Props) {
   // Ensure params is properly awaited
   const { slug } = params;
+  const { guest } = searchParams;
   
   await dbConnect();
   
@@ -82,5 +93,5 @@ export default async function WeddingPage({ params, searchParams }: Props) {
   // Convert mongo document to plain object
   const wedding = JSON.parse(JSON.stringify(weddingDoc)) as WeddingData;
   
-  return <WeddingDisplay wedding={wedding} />;
+  return <WeddingDisplay wedding={wedding} guestName={guest} />;
 } 
