@@ -31,6 +31,7 @@ export default function GuestManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [guests, setGuests] = useState<any[]>([]);
   const [selectedGuest, setSelectedGuest] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('all');
 
   // Function to fetch user's weddings
   const fetchWeddings = async () => {
@@ -110,10 +111,74 @@ export default function GuestManagementPage() {
     }
   };
 
-  // Filter guests based on search term
-  const filteredGuests = guests.filter(guest =>
-    guest.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    guest.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter guests based on tab and search
+  const getFilteredGuests = () => {
+    return guests.filter(guest => {
+      const matchesSearch = guest.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guest.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      if (activeTab === 'all') return matchesSearch;
+      return matchesSearch && guest.status === activeTab;
+    });
+  };
+
+  // Reusable Guest Table Component
+  const GuestTable = ({ guests }: { guests: any[] }) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[250px]">
+            <Button variant="ghost" className="p-0 font-medium">
+              Name <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </TableHead>
+          <TableHead>Contact</TableHead>
+          <TableHead>Group</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {guests.map((guest) => (
+          <TableRow key={guest._id}>
+            <TableCell className="font-medium">{guest.name}</TableCell>
+            <TableCell>
+              <div className="text-sm">{guest.email}</div>
+              {guest.phone && <div className="text-xs text-muted-foreground">{guest.phone}</div>}
+            </TableCell>
+            <TableCell>{guest.group}</TableCell>
+            <TableCell>
+              <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                guest.status === "attending"
+                  ? "bg-green-100 text-green-800"
+                  : guest.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+              }`}>
+                {guest.status}
+              </div>
+            </TableCell>
+            <TableCell className="text-right">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSelectedGuest(guest)}>
+                    Edit Guest
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDeleteGuest(guest._id)}>
+                    Remove Guest
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 
   return (
@@ -165,7 +230,7 @@ export default function GuestManagementPage() {
             <CardDescription>Manage your wedding guests and track their RSVP status</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="all" className="space-y-4">
+            <Tabs defaultValue="all" className="space-y-4" onValueChange={setActiveTab}>
               <div className="flex items-center justify-between">
                 <TabsList>
                   <TabsTrigger value="all">All Guests</TabsTrigger>
@@ -204,67 +269,20 @@ export default function GuestManagementPage() {
               </div>
 
               <TabsContent value="all">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[250px]">
-                        <Button variant="ghost" className="p-0 font-medium">
-                          Name
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Group</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredGuests.map((guest) => (
-                      <TableRow key={guest._id}>
-                        <TableCell className="font-medium">{guest.name}</TableCell>
-                        <TableCell>
-                          <div className="text-sm">{guest.email}</div>
-                          {guest.phone && (
-                            <div className="text-xs text-muted-foreground">{guest.phone}</div>
-                          )}
-                        </TableCell>
-                        <TableCell>{guest.group}</TableCell>
-                        <TableCell>
-                          <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            guest.status === "attending"
-                              ? "bg-green-100 text-green-800"
-                              : guest.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                          }`}>
-                            {guest.status}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <ChevronDown className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setSelectedGuest(guest)}>
-                                Edit Guest
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteGuest(guest._id)}>
-                                Remove Guest
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <GuestTable guests={getFilteredGuests()} />
               </TabsContent>
               
-              {/* ...similar TabsContent for other tabs... */}
+              <TabsContent value="attending">
+                <GuestTable guests={getFilteredGuests()} />
+              </TabsContent>
+              
+              <TabsContent value="not-attending">
+                <GuestTable guests={getFilteredGuests()} />
+              </TabsContent>
+              
+              <TabsContent value="pending">
+                <GuestTable guests={getFilteredGuests()} />
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
