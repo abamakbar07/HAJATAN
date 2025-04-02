@@ -1,17 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useEffect } from 'react';
 import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -27,250 +36,184 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface AddGuestFormProps {
   weddingId: string;
+  guestData?: any;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
   className?: string;
 }
 
-export default function AddGuestForm({ weddingId, onSuccess, className }: AddGuestFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function AddGuestForm({ 
+  weddingId, 
+  guestData, 
+  isOpen, 
+  onOpenChange,
+  onSuccess 
+}: AddGuestFormProps) {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      status: 'pending',
-      group: 'Friends',
-      numberOfGuests: 1,
-      message: '',
-    },
-  });
-  
-  const onSubmit = async (data: FormValues) => {
-    if (!weddingId) {
-      toast({
-        title: 'Error',
-        description: 'Wedding ID is required',
-        variant: 'destructive',
-      });
-      return;
+  const isEditMode = !!guestData;
+
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      setOpen(isOpen);
     }
-    
-    setIsSubmitting(true);
-    
+  }, [isOpen]);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    onOpenChange?.(newOpen);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      weddingId,
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      group: formData.get('group'),
+      status: isEditMode ? guestData.status : 'pending',
+      numberOfGuests: Number(formData.get('numberOfGuests')) || 1,
+    };
+
     try {
-      const response = await fetch('/api/guests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          weddingId,
-        }),
+      const url = isEditMode 
+        ? `/api/guests/${guestData._id}`
+        : '/api/guests';
+      
+      const response = await fetch(url, {
+        method: isEditMode ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to add guest');
-      }
-      
+
+      if (!response.ok) throw new Error(`Failed to ${isEditMode ? 'update' : 'add'} guest`);
+
       toast({
-        title: 'Guest Added',
-        description: 'Guest has been added successfully',
+        title: 'Success',
+        description: `Guest ${isEditMode ? 'updated' : 'added'} successfully`,
       });
-      
-      form.reset();
-      
-      if (onSuccess) {
-        onSuccess();
-      }
+
+      handleOpenChange(false);
+      if (onSuccess) onSuccess();
+      e.currentTarget.reset();
     } catch (error) {
-      console.error('Error adding guest:', error);
       toast({
         title: 'Error',
-        description: 'Failed to add guest',
+        description: `Failed to ${isEditMode ? 'update' : 'add'} guest. Please try again.`,
         variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
-  
+
   return (
-    <div className={className}>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter guest name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="Enter guest email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone (optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter guest phone number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="group"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Group</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select group" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Family">Family</SelectItem>
-                      <SelectItem value="Friends">Friends</SelectItem>
-                      <SelectItem value="Colleagues">Colleagues</SelectItem>
-                      <SelectItem value="VIP">VIP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="numberOfGuests"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of Guests</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(parseInt(value))}
-                    defaultValue={field.value.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select number of guests" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>RSVP Status</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex flex-col space-y-1"
-                  >
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="pending" />
-                      </FormControl>
-                      <FormLabel className="font-normal">Pending</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="attending" />
-                      </FormControl>
-                      <FormLabel className="font-normal">Attending</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="not-attending" />
-                      </FormControl>
-                      <FormLabel className="font-normal">Not Attending</FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="message"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Message (optional)</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Add notes about this guest" 
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adding Guest...
-              </>
-            ) : (
-              'Add Guest'
-            )}
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        {!isEditMode && (
+          <Button size="sm" className="bg-rose-500 hover:bg-rose-600">
+            Add Guest
           </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{isEditMode ? 'Edit Guest' : 'Add New Guest'}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Update the guest details.' : 'Enter the guest details. You can modify these later.'}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Guest name"
+                defaultValue={guestData?.name}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="guest@example.com"
+                defaultValue={guestData?.email}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phone" className="text-right">
+                Phone
+              </Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="+1234567890"
+                defaultValue={guestData?.phone}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="group" className="text-right">
+                Group
+              </Label>
+              <Select name="group" defaultValue={guestData?.group}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="family">Family</SelectItem>
+                  <SelectItem value="friend">Friend</SelectItem>
+                  <SelectItem value="colleague">Colleague</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="numberOfGuests" className="text-right">
+                Guests
+              </Label>
+              <Input
+                id="numberOfGuests"
+                name="numberOfGuests"
+                type="number"
+                defaultValue={guestData?.numberOfGuests || 1}
+                min="1"
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isEditMode ? ( 
+                isLoading ? 'Updating...' : 'Update Guest'
+              ) : ( 
+                isLoading ? 'Adding...' : 'Add Guest'
+              )}
+            </Button>
+          </div>
         </form>
-      </Form>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-} 
+}
