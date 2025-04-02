@@ -1,19 +1,36 @@
-## Additional Recommendations
+### Features Not Fully Implemented
 
-### Mobile Optimization
-- Ensure that both the dashboard and preview functionalities are fully responsive for mobile users.
-- Consider adding a mobile preview toggle on the preview page to demonstrate how the invitation will appear on different devices.
+#### Social Chat Room
+- **Status**: Not mentioned in the codebase or documentation.
+- **Notes**: Requires development of a real-time chat system for guests from scratch.
 
-### Social Sharing Integration
-- Implement direct sharing buttons for WhatsApp and other social media platforms on the preview page.
-- Include a "Copy Link" button to facilitate easy sharing of the invitation URL.
+#### Analytics Dashboard
+- **Status**: Basic RSVP tracking exists, but no full analytics system.
+- **Notes**: The TODO.md suggests adding a "lightweight analytics dashboard" as a future enhancement.
 
-### Theme Preview Functionality
-- Allow users to preview the invitation with various themes without saving any changes. This feature will enable users to experiment with different themes before making a final decision.
+#### Theme Customization
+- **Status**: Limited to basic customization (fonts, colors, images).
+- **Notes**: 
+    - Drag-and-drop layout editor is marked as a "Future Feature" in README.md.
+    - Advanced customization is part of the "Business" tier plan but is not yet implemented.
 
-### QR Code Enhancement
-- Introduce a "Generate QR Codes" button in the dashboard for convenient batch creation of QR codes.
-- Implement a simple QR code tester within the preview interface to verify QR code functionality.
+#### Photo Gallery with Cloudinary
+- **Status**: PhotoGallery component exists, but no Cloudinary integration.
+- **Notes**: Current implementation lacks cloud storage integration.
 
-### Analytics Integration
-- Add a lightweight analytics dashboard that displays invitation views and engagement metrics. This feature will help track guest interactions with the invitation.
+#### Multiple Events Organization
+- **Status**: Limited functionality for managing multiple events.
+- **Notes**: 
+    - Events array exists in the `WeddingDisplayProps` interface.
+    - UI for creating and managing multiple events is underdeveloped.
+
+---
+
+### Core Features Implemented
+
+- Basic digital invitations.
+- RSVP system.
+- Guest management.
+- Basic theme selection.
+- Responsive design.
+- QR code generation for guests.
