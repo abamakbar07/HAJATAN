@@ -21,7 +21,8 @@ export default async function EditWeddingPage({ params }: EditWeddingPageProps) 
   await dbConnect()
 
   const wedding = await Wedding.findOne({
-    _id: params.id,
+    // _id: params.id,
+    slug: params.id,
     userId: session.user.id,
   })
 

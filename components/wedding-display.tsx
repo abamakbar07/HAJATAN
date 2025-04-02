@@ -37,7 +37,7 @@ interface GalleryConfig {
 }
 
 interface WeddingDisplayProps {
-  wedding: {
+  weddingData: {
     _id: string;
     brideName: string;
     groomName: string;
@@ -70,13 +70,13 @@ interface WeddingDisplayProps {
   guestName?: string;
 }
 
-export default function WeddingDisplay({ wedding, isPreview = false, guestName }: WeddingDisplayProps) {
+export default function WeddingDisplay({ weddingData, isPreview = false, guestName }: WeddingDisplayProps) {
   const [showCover, setShowCover] = useState(true);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [contentVisible, setContentVisible] = useState(false);
   
   // Format wedding dates and times
-  const weddingDate = new Date(wedding.date);
+  const weddingDate = new Date(weddingData.date);
   const formattedDate = weddingDate.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -85,7 +85,7 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
   });
   
   // Theme defaults if not provided
-  const themeConfig = wedding.themeConfig || {
+  const themeConfig = weddingData.themeConfig || {
     primaryColor: '#000000',
     secondaryColor: '#ffffff',
     fontFamily: 'Inter',
@@ -93,7 +93,7 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
   };
   
   // Gallery config defaults if not provided
-  const galleryConfig = wedding.galleryConfig || {
+  const galleryConfig = weddingData.galleryConfig || {
     spacing: 8,
     showCaptions: false,
     borderRadius: 8,
@@ -101,7 +101,7 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
   };
   
   // Gallery layout default if not provided
-  const galleryLayout = wedding.galleryLayout || 'grid';
+  const galleryLayout = weddingData.galleryLayout || 'grid';
   
   // Sample music URL - in a real app, you would get this from the wedding model
   const musicUrl = "https://example.com/sample-music.mp3";
@@ -133,11 +133,11 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
       {/* Cover Component */}
       {showCover && (
         <WeddingCover 
-          brideName={wedding.brideName}
-          groomName={wedding.groomName}
-          date={wedding.date}
+          brideName={weddingData.brideName}
+          groomName={weddingData.groomName}
+          date={weddingData.date}
           guestName={guestName}
-          coverImage={wedding.gallery?.[0]}
+          coverImage={weddingData.gallery?.[0]}
           onOpen={handleOpenInvitation}
           themeConfig={themeConfig}
         />
@@ -155,7 +155,7 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
                 <Home className="h-4 w-4 mr-1" />
                 Dashboard
               </Link>
-              <Link href={`/dashboard/weddings/${wedding._id}/edit`} className="text-sm font-medium flex items-center hover:text-amber-800">
+              <Link href={`/dashboard/weddings/${weddingData.slug}/edit`} className="text-sm font-medium flex items-center hover:text-amber-800">
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Link>
@@ -198,10 +198,10 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
               color: themeConfig.secondaryColor,
             }}
           >
-            {wedding.gallery && wedding.gallery.length > 0 ? (
+            {weddingData.gallery && weddingData.gallery.length > 0 ? (
               <div className="absolute inset-0 z-0">
                 <Image
-                  src={wedding.gallery[0]}
+                  src={weddingData.gallery[0]}
                   alt="Wedding Hero"
                   fill
                   className="object-cover brightness-50"
@@ -216,20 +216,20 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
               <p className="text-lg mb-4 font-light">Together with their families</p>
               
               {/* Parent Names (if available) */}
-              {wedding.parentNames && (
+              {weddingData.parentNames && (
                 <div className="mb-4 text-sm md:text-base">
-                  {wedding.parentNames.bride && (
+                  {weddingData.parentNames.bride && (
                     <p className="mb-1">
-                      {wedding.parentNames.bride.father && wedding.parentNames.bride.mother ? 
-                        `${wedding.parentNames.bride.father} & ${wedding.parentNames.bride.mother}` : 
-                        wedding.parentNames.bride.father || wedding.parentNames.bride.mother}
+                      {weddingData.parentNames.bride.father && weddingData.parentNames.bride.mother ? 
+                        `${weddingData.parentNames.bride.father} & ${weddingData.parentNames.bride.mother}` : 
+                        weddingData.parentNames.bride.father || weddingData.parentNames.bride.mother}
                     </p>
                   )}
-                  {wedding.parentNames.groom && (
+                  {weddingData.parentNames.groom && (
                     <p>
-                      {wedding.parentNames.groom.father && wedding.parentNames.groom.mother ? 
-                        `${wedding.parentNames.groom.father} & ${wedding.parentNames.groom.mother}` : 
-                        wedding.parentNames.groom.father || wedding.parentNames.groom.mother}
+                      {weddingData.parentNames.groom.father && weddingData.parentNames.groom.mother ? 
+                        `${weddingData.parentNames.groom.father} & ${weddingData.parentNames.groom.mother}` : 
+                        weddingData.parentNames.groom.father || weddingData.parentNames.groom.mother}
                     </p>
                   )}
                 </div>
@@ -239,13 +239,13 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
                 className="text-4xl md:text-6xl mb-4"
                 style={{ fontFamily: themeConfig.fontFamily }}
               >
-                {wedding.brideName} <span className="text-2xl md:text-3xl">&</span> {wedding.groomName}
+                {weddingData.brideName} <span className="text-2xl md:text-3xl">&</span> {weddingData.groomName}
               </h1>
               <p className="text-xl mb-8">REQUEST THE HONOR OF YOUR PRESENCE</p>
               <div className="text-lg mb-8">
                 <p>{formattedDate}</p>
-                <p>{wedding.time}</p>
-                <p>{wedding.venue}, {wedding.city}</p>
+                <p>{weddingData.time}</p>
+                <p>{weddingData.venue}, {weddingData.city}</p>
               </div>
               
               <CountdownTimer targetDate={weddingDate} className="mt-8" />
@@ -256,8 +256,8 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
             {/* Love Story Section */}
             <section id="story" className="bg-white rounded-lg shadow-lg p-8">
               <LoveStory 
-                story={wedding.story || "Our love story is still being written..."}
-                images={wedding.gallery?.slice(0, 3) || []}
+                story={weddingData.story || "Our love story is still being written..."}
+                images={weddingData.gallery?.slice(0, 3) || []}
               />
             </section>
             
@@ -270,18 +270,18 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
                   <h3 className="text-2xl font-medium text-center">Ceremony & Reception</h3>
                   <div className="text-center">
                     <p className="text-lg font-medium">{formattedDate}</p>
-                    <p>{wedding.time}</p>
-                    <p className="font-medium mt-4">{wedding.venue}</p>
-                    <p>{wedding.address}</p>
-                    <p>{wedding.city}, {wedding.country}</p>
+                    <p>{weddingData.time}</p>
+                    <p className="font-medium mt-4">{weddingData.venue}</p>
+                    <p>{weddingData.address}</p>
+                    <p>{weddingData.city}, {weddingData.country}</p>
                   </div>
                   
                   {/* Additional Events */}
-                  {wedding.events && wedding.events.length > 0 && (
+                  {weddingData.events && weddingData.events.length > 0 && (
                     <div className="mt-8 space-y-8">
                       <Separator />
                       
-                      {wedding.events.map((event, index) => (
+                      {weddingData.events.map((event, index) => (
                         <div key={index} className="text-center">
                           <h4 className="text-xl font-medium">{event.title}</h4>
                           <p>{new Date(event.date).toLocaleDateString('en-US', {
@@ -300,16 +300,16 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
                 </div>
                 
                 <div>
-                  <VenueMap address={`${wedding.venue}, ${wedding.address}, ${wedding.city}, ${wedding.country}`} />
+                  <VenueMap address={`${weddingData.venue}, ${weddingData.address}, ${weddingData.city}, ${weddingData.country}`} />
                 </div>
               </div>
             </section>
             
             {/* Photo Gallery Section */}
-            {wedding.gallery && wedding.gallery.length > 0 && (
+            {weddingData.gallery && weddingData.gallery.length > 0 && (
               <section id="gallery" className="bg-white rounded-lg shadow-lg p-8">
                 <PhotoGallery 
-                  images={wedding.gallery} 
+                  images={weddingData.gallery} 
                   layout={galleryLayout as GalleryLayout}
                   config={galleryConfig}
                 />
@@ -319,7 +319,7 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
             {/* RSVP Section */}
             <section id="rsvp" className="bg-white rounded-lg shadow-lg p-8">
               <h2 className="text-3xl font-semibold text-center mb-8">RSVP</h2>
-              <RSVPForm weddingId={wedding._id.toString()} />
+              <RSVPForm weddingId={weddingData._id.toString()} />
             </section>
           </div>
           
@@ -332,7 +332,7 @@ export default function WeddingDisplay({ wedding, isPreview = false, guestName }
             }}
           >
             <p className="text-lg mb-2" style={{ fontFamily: themeConfig.fontFamily }}>
-              {wedding.brideName} & {wedding.groomName}
+              {weddingData.brideName} & {weddingData.groomName}
             </p>
             <p className="text-sm">{formattedDate}</p>
             <p className="text-xs mt-4">Powered by HAJATAN</p>

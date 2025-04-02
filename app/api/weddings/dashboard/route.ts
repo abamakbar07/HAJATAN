@@ -1,26 +1,24 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { type NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "../../auth/[...nextauth]/route"
 import dbConnect from "@/lib/mongodb"
 import Wedding from "@/models/Wedding"
-import Guest from "@/models/Guest"
-import Gift from "@/models/Gift"
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user?.id) {
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     await dbConnect()
 
-    // Find user's wedding
-    const wedding = await Wedding.findOne({ userId: session.user.id })
+    const userId = session.user.id
+    const wedding = await Wedding.findOne({ userId })
 
     if (!wedding) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         stats: {
           invitations: 0,
           rsvpResponses: 0,
@@ -30,59 +28,33 @@ export async function GET(req: NextRequest) {
           invitationsOpened: 0,
           responseRate: 0,
           attendingRate: 0,
-          recentResponses: [],
-        }
+          weddingId: "",
+          weddingSlug: "",
+          recentResponses: []
+        },
+        weddingDate: null
       })
     }
 
-    // Get wedding stats
-    const guests = await Guest.find({ weddingId: wedding._id })
-    const gifts = await Gift.find({ weddingId: wedding._id })
-    
-    const invitations = guests.length
-    const invitationsSent = guests.filter(guest => guest.invitationSent).length
-    const invitationsOpened = guests.filter(guest => guest.invitationOpened).length
-    const rsvpResponses = guests.filter(guest => guest.rsvpStatus !== 'pending').length
-    const confirmedGuests = guests.filter(guest => guest.rsvpStatus === 'attending').length
-    
-    // Calculate percentages
-    const responseRate = invitations > 0 ? Math.round((rsvpResponses / invitations) * 100) : 0
-    const attendingRate = rsvpResponses > 0 ? Math.round((confirmedGuests / rsvpResponses) * 100) : 0
-    
-    // Calculate total gifts amount
-    const totalGifts = gifts.reduce((total, gift) => total + (gift.amount || 0), 0)
-    
-    // Get recent responses - last 10 ordered by response date
-    const recentResponses = guests
-      .filter(guest => guest.rsvpStatus !== 'pending')
-      .sort((a, b) => {
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      })
-      .slice(0, 10)
-      .map(guest => ({
-        id: guest._id.toString(),
-        name: guest.name,
-        email: guest.email || "",
-        status: guest.rsvpStatus,
-        timestamp: guest.updatedAt
-      }))
-
+    // Construct stats object with actual data
     return NextResponse.json({
       stats: {
-        invitations,
-        rsvpResponses,
-        confirmedGuests,
-        totalGifts,
-        invitationsSent,
-        invitationsOpened,
-        responseRate,
-        attendingRate,
-        recentResponses,
+        invitations: wedding.invitations?.length || 0,
+        rsvpResponses: wedding.rsvpResponses || 0,
+        confirmedGuests: wedding.confirmedGuests || 0,
+        totalGifts: wedding.gifts?.length || 0,
+        invitationsSent: wedding.invitationsSent || 0,
+        invitationsOpened: wedding.invitationsOpened || 0,
+        responseRate: wedding.responseRate || 0,
+        attendingRate: wedding.attendingRate || 0,
+        weddingId: wedding._id,
+        weddingSlug: wedding.slug,
+        recentResponses: wedding.recentResponses || []
       },
-      weddingDate: wedding.date || null,
+      weddingDate: wedding.date
     })
   } catch (error) {
     console.error("Error fetching dashboard data:", error)
     return NextResponse.json({ error: "Failed to fetch dashboard data" }, { status: 500 })
   }
-} 
+}

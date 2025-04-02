@@ -17,6 +17,7 @@ interface WeddingData {
   address: string;
   city: string;
   country: string;
+  theme: string;
   story?: string;
   gallery?: string[];
   slug: string;
@@ -80,5 +81,5 @@ export default async function WeddingPreviewPage() {
   // Use a sample guest name for preview
   const sampleGuestName = "Preview Guest";
   
-  return <WeddingDisplay wedding={wedding} isPreview={true} guestName={sampleGuestName} />;
+  return <WeddingDisplay weddingData={wedding} isPreview={true} guestName={sampleGuestName} />;
 } 
