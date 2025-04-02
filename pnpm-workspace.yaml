@@ -1,2 +1,7 @@
 ignoredBuiltDependencies:
+  - '@mongodb-js/zstd'
   - core-js
+  - kerberos
+  - mongodb-client-encryption
+onlyBuiltDependencies:
+  - sharp

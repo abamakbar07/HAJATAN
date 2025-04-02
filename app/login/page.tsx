@@ -1,34 +1,36 @@
-"use client"
+'use client'
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { signIn } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { Heart } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "sonner"
+import type React from 'react'
+import { useState, useEffect } from 'react'
+import { signIn } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Heart } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from 'sonner'
+import { Suspense } from 'react'
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+// Client component that uses useSearchParams
+function LoginContent() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  
+
   useEffect(() => {
     // Check for success message from redirect after signup
-    const success = searchParams.get("success")
+    const success = searchParams.get('success')
     if (success) {
       toast.success(success)
     }
-    
+
     // Check for error message from redirect
-    const errorMsg = searchParams.get("error")
+    const errorMsg = searchParams.get('error')
     if (errorMsg) {
       setError(decodeURIComponent(errorMsg))
     }
@@ -36,17 +38,17 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!email.trim() || !password.trim()) {
-      setError("Email and password are required")
+      setError('Email and password are required')
       return
     }
-    
+
     setLoading(true)
-    setError("")
+    setError('')
 
     try {
-      const result = await signIn("credentials", {
+      const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
@@ -55,12 +57,12 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error)
       } else {
-        toast.success("Logged in successfully")
-        router.push("/dashboard")
+        toast.success('Logged in successfully')
+        router.push('/dashboard')
         router.refresh()
       }
     } catch (error) {
-      setError("An error occurred. Please try again.")
+      setError('An error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -68,7 +70,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = () => {
     setLoading(true)
-    signIn("google", { callbackUrl: "/dashboard" })
+    signIn('google', { callbackUrl: '/dashboard' })
   }
 
   return (
@@ -81,7 +83,7 @@ export default function LoginPage() {
           </Link>
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">Sign in to your account</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Or{" "}
+            Or{' '}
             <Link href="/signup" className="font-medium text-rose-500 hover:text-rose-600">
               create a new account
             </Link>
@@ -128,7 +130,7 @@ export default function LoginPage() {
                 />
               </div>
               <Button type="submit" className="w-full bg-rose-500 hover:bg-rose-600" disabled={loading}>
-                {loading ? "Signing in..." : "Sign in"}
+                {loading ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
           </CardContent>
@@ -168,6 +170,15 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+// Parent component with Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   )
 }
 
